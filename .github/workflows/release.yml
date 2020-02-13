@@ -49,13 +49,10 @@ jobs:
       shell: bash
       run: |
         URL=`cat data/release_url.txt | tr -d '"'`
-        VERSION=`cat src/version.txt`
         echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
         echo ::set-output name=URL::$URL
-        echo ::set-output name=VERSION::$VERSION
         echo "SOURCE_TAG::${GITHUB_REF#refs/tags/}"
         echo "URL::$URL"
-        echo "VERSION::$VERSION"
     - uses: actions/checkout@v1
     - uses: ilammy/msvc-dev-cmd@v1
 
@@ -108,6 +105,12 @@ jobs:
     #   if: matrix.os != 'windows-latest'
     #   run: |
     #     zip --junk-paths merlin32.zip Source/merlin32 README.md
+    - name: Set VERSION
+      id: version
+      run: |
+        VERSION=`cat build/src/version.txt`
+        echo ::set-output name=VERSION::$VERSION
+        echo "VERSION::$VERSION"
 
     - name: Package MacOS
       if: matrix.os == 'macos-latest'
@@ -131,14 +134,16 @@ jobs:
     - name: Package .deb
       if: matrix.os == 'ubuntu-latest'
       env:
-        PACKAGE_NAME: gsplus_${{ steps.release_data.outputs.VERSION }}-0
+        PACKAGE_NAME: gsplus_${{ steps.version.outputs.VERSION }}-0
       run: |
         #PACKAGE_NAME: gsplus_$VERSION-0
         mkdir -p $PACKAGE_NAME/usr/local/bin
         mkdir -p $PACKAGE_NAME/DEBIAN
-        cp gsplus.bin $PACKAGE_NAME/usr/local/bin/gsplus
-        cp assets/control $PACKAGE_NAME/DEBIAN
+        cp build/src/GSplus $PACKAGE_NAME/usr/local/bin/gsplus
+        cp build/src/assets/control $PACKAGE_NAME/DEBIAN
         dpkg-deb --build $PACKAGE_NAME
+        ls -al
+        pwd
 
     - name: Upload Release Asset MacOSX
       if: matrix.os == 'macos-latest'
@@ -149,7 +154,7 @@ jobs:
       with:
         upload_url: ${{ steps.release_data.outputs.URL }}
         asset_path: ./build/GSplus-Install.dmg
-        asset_name: ${{ format('GSplus-Install-{0}-{1}.dmg', matrix.os, steps.release_data.outputs.SOURCE_TAG ) }}
+        asset_name: ${{ format('gsplus-macos-{0}.dmg', steps.version.outputs.VERSION ) }}
         asset_content_type: application/x-apple-diskimage
 
     - name: Upload Release Asset Ubuntu
@@ -160,7 +165,7 @@ jobs:
       with:
         upload_url: ${{ steps.release_data.outputs.URL }}
         asset_path: ./gsplus-ubuntu.tar.bz2
-        asset_name: ${{ format('gsplus-ubuntu-{0}.tar.bz2', steps.release_data.outputs.VERSION ) }}
+        asset_name: ${{ format('gsplus-ubuntu-{0}.tar.bz2', steps.version.outputs.VERSION ) }}
         asset_content_type: application/x-bzip2
 
     - name: Upload Release Asset .deb
@@ -170,6 +175,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.release_data.outputs.URL }}
-        asset_path: ${{ format('./gsplus_{0}-0.deb', steps.release_data.outputs.VERSION ) }}
-        asset_name: ${{ format('gsplus_{0}-0.deb', steps.release_data.outputs.VERSION ) }}
+        asset_path: ${{ format('./gsplus_{0}-0.deb', steps.version.outputs.VERSION ) }}
+        asset_name: ${{ format('gsplus_{0}-0.deb', steps.version.outputs.VERSION ) }}
         asset_content_type: application/vnd.debian.binary-package
