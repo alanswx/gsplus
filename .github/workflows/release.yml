@@ -99,12 +99,12 @@ jobs:
         sudo apt-get -y install libpcap0.8-dev libfreetype6-dev libsdl2-dev libsdl2-image-dev
 
     - name: Build windows
-     if: matrix.os == 'windows-latest'
-     run: |
-       mkdir build
-       cd build
-       cmake ..
-       nmake
+      if: matrix.os == 'windows-latest'
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        nmake
 
     - name: Build MacOS/Ubuntu
       if: matrix.os != 'windows-latest'
