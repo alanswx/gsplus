@@ -104,7 +104,7 @@ jobs:
         mkdir build
         cd build
         cmake ..
-        ls -al
+        dir
         nmake
 
     - name: Build MacOS/Ubuntu
