@@ -49,6 +49,10 @@ if(NOT IS_BIG_ENDIAN)
 	add_definitions(-DGSPLUS_LITTLE_ENDIAN)
 endif()
 
+find_package(verilator HINTS $ENV{VERILATOR_ROOT} ${VERILATOR_ROOT})
+if (NOT verilator_FOUND)
+  message(FATAL_ERROR "Verilator was not found. Either install it, or set the VERILATOR_ROOT environment variable")
+endif()
 
 pkg_check_modules(SDL2 sdl2)
 pkg_check_modules(FREETYPE2 freetype2)
@@ -174,7 +178,7 @@ set(MACOSX_BUNDLE_GUI_IDENTIFIER com.dagenbrock.gsplus)
 # OS X properties.
 add_executable(GSplus WIN32 MACOSX_BUNDLE
 	adb.c clock.c config.c engine_c.c scc.c iwm.c 
-	joystick_driver.c moremem.c paddles.c parallel.c printer.cpp sim65816.c
+	joystick_driver.c moremem.c paddles.c parallel.c printer.cpp sim65816.cpp
 	smartport.c sound.c sound_driver.c video.c scc_socket_driver.c glog.c
 	imagewriter.cpp scc_imagewriter.c scc_llap.c options.c
 
@@ -240,7 +244,12 @@ elseif(READLINE MATCHES "LIBEDIT")
 	target_link_libraries(x_readline PUBLIC edit)
 endif()
 
-target_link_libraries(GSplus x_readline)
+verilate(GSplus
+  INCLUDE_DIRS "../v"
+  SOURCES ../v/top.v)
+
+
+target_link_libraries(GSplus PUBLIC x_readline)
 
 if (WITH_RAWNET)
 	target_link_libraries(GSplus rawnet)
@@ -255,9 +264,8 @@ if (WIN32)
 		winmm gdi32 dsound comctl32 ws2_32 shell32
 	)
 endif()
-
 if (DRIVER MATCHES "SDL")
-	target_link_libraries(GSplus ${SDL2_LDFLAGS} ${FREETYPE2_LDFLAGS} SDL2_image)
+	target_link_libraries(GSplus PUBLIC ${SDL2_LDFLAGS} ${FREETYPE2_LDFLAGS} SDL2_image)
 	target_compile_options(GSplus PUBLIC ${SDL2_CFLAGS} ${FREETYPE2_CFLAGS}  -DHAVE_SDL)
 endif()
 

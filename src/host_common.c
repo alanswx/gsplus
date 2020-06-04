@@ -18,6 +18,7 @@
 #define strncasecmp strnicmp
 #endif
 
+const char g_gsplus_version_str[] = "0.14";
 
 #include "host_common.h"
 

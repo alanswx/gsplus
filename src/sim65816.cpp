@@ -8,6 +8,10 @@
 #include <math.h>
 #include <ctype.h>
 
+#include <verilated.h>
+#include "Vtop.h"
+
+
 #include "defc.h"
 #include "printer.h"
 #include "imagewriter.h"
@@ -181,7 +185,8 @@ int g_imagewriter_paper = 0;
 int g_imagewriter_banner = 0;
 
 int g_config_iwm_vbl_count = 0;
-const char g_gsplus_version_str[] = "0.14";
+extern char const g_gsplus_version_str[];
+
 int g_pause=0;  // OG Added pause
 
 #define START_DCYCS     (0.0)
@@ -1376,6 +1381,10 @@ int run_prog()      {
   int fast, zip_speed, faster_than_28, unl_speed;
   int this_type;
 
+// AJS 
+Vtop *top = new Vtop;
+
+
   fflush(stderr);
   fflush(stdout);
 
@@ -1484,6 +1493,12 @@ int run_prog()      {
     ret = enter_engine(&engine);
 
     now_dtime = get_dtime();
+
+//
+// AJS -- do we want to do this before or after CPU?
+ top->clk_sys=!top->clk_sys;
+ top->eval();
+
 
     g_cur_sim_dtime += (now_dtime - prev_dtime);
 
@@ -2342,7 +2357,15 @@ void do_mvn(word32 banks)      {
 }
 #endif
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 extern void host_fst(void);
+#ifdef __cplusplus
+}
+#endif
+
 
 static void wdm_print() {
 	/* x:y is ptr to cstring to print, a is type of string */
@@ -2415,8 +2438,16 @@ static void wdm_hexdump() {
 		}
 	}
 }
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 extern void host_mli_head(void);
 extern void host_mli_tail(void);
+#ifdef __cplusplus
+}
+#endif
 
 void
 do_wdm(word32 arg)

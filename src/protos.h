@@ -4,6 +4,10 @@
   See COPYRIGHT.txt for Copyright information
 	See LICENSE.txt for license (GPL v2)
 */
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /* xdriver.c and macdriver.c and windriver.c */
 int x_show_alert(int is_fatal, const char *str);
@@ -513,3 +517,7 @@ word32 float_bus(double dcycs);
 byte parallel_read(word16 paddr);
 void parallel_write(word16 paddr, byte pvar);
 void printer_update();
+#ifdef __cplusplus
+}
+#endif
+
